@@ -1,0 +1,51 @@
+
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.cluster import AgglomerativeClustering
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+# Load the dataset
+df = pd.read_csv('50_Startups.csv')
+
+# Encode the 'STATE' column using LabelEncoder
+label_encoder = LabelEncoder()
+df['STATE'] = label_encoder.fit_transform(df['STATE'])
+
+# Scaling the features using StandardScaler
+scaler = StandardScaler()
+scaled_df = scaler.fit_transform(df[['RND', 'ADMIN', 'MKT', 'STATE', 'PROFIT']])
+
+# Convert scaled data back to a DataFrame
+scaled_df = pd.DataFrame(scaled_df, columns=['RND', 'ADMIN', 'MKT', 'STATE', 'PROFIT'])
+
+# Apply AgglomerativeClustering on the scaled data (considering the 'PROFIT' column)
+# Using a reasonable number of clusters (adjust as needed)
+hc = AgglomerativeClustering(n_clusters=5, metric='euclidean', linkage='ward')
+
+# Fit the model and assign cluster labels
+df['Cluster'] = hc.fit_predict(scaled_df[['RND', 'ADMIN', 'MKT', 'STATE', 'PROFIT']])
+
+# Check the first few rows with cluster labels
+print(df.head())
+
+# Generate the linkage matrix for dendrogram
+linked = linkage(scaled_df[['RND', 'ADMIN', 'MKT', 'STATE', 'PROFIT']], method='ward')
+
+# Create the dendrogram
+plt.figure(figsize=(10, 7))
+dendrogram(linked)
+plt.title('Dendrogram for Hierarchical Clustering')
+plt.xlabel('Index')
+plt.ylabel('Euclidean Distance')
+plt.show()
+
+# Plot the clusters based on PROFIT
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x=df['RND'], y=df['PROFIT'], hue=df['Cluster'], palette='viridis', s=100)
+plt.title('Clusters based on R&D and Profit')
+plt.xlabel('R&D Spending')
+plt.ylabel('Profit')
+plt.show()
