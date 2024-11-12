@@ -1,0 +1,67 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+import matplotlib.pyplot as plt
+from sklearn import tree
+
+# Load the dataset
+df = pd.read_csv(r'E:\ML Dataset\LP-1 Dataset\Decision Tree & Naive Bayes Classification\madfhantr.csv')
+df.head()
+
+# Check the data types of all columns
+print(df.dtypes)
+print(df.columns)
+
+# Clean 'Dependents' column - Replace '3+' with '3'
+df['Dependents'] = df['Dependents'].replace('3+', 3)
+
+# Convert the 'Dependents' column to numeric type
+df['Dependents'] = pd.to_numeric(df['Dependents'], errors='coerce')
+
+# Check for non-numeric values in categorical columns before encoding
+print("Categorical Columns - Unique Values before Encoding:")
+for column in categorical_columns:
+    print(f"{column}: {df[column].unique()}")
+
+# Check if there are any non-numeric values in 'Loan_Status'
+print(f"Loan_Status unique values: {df['Loan_Status'].unique()}")
+
+# Convert categorical columns to string before encoding
+for column in categorical_columns:
+    df[column] = df[column].astype(str)
+
+# Label encode the categorical columns
+label_encoder = LabelEncoder()
+for column in categorical_columns:
+    df[column] = label_encoder.fit_transform(df[column])
+
+# Check data types again after encoding
+print(df.dtypes)
+
+# Convert the 'Dependents' column to numeric type
+df['Dependents'] = pd.to_numeric(df['Dependents'], errors='coerce')
+for column in categorical_columns:
+    if df[column].dtype == 'object':
+        print(f"Warning: {column} is still of type 'object', encoding is needed.")
+    else:
+        print(f"{column} is already encoded with numeric values.")
+
+X = df.drop(columns=['Loan_Status'])  # 'Loan_Status' is the target variable
+y = df['Loan_Status']  # Target variable is 'Loan_Status'
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+clf = DecisionTreeClassifier(random_state=42)
+clf.fit(X_train, y_train)
+
+y_pred = clf.predict(X_test)
+
+plt.figure(figsize=(12, 8))
+# Check class names before passing them to the plot
+print("Class Names for Tree Visualization:", ['Not Approved', 'Approved'])
+
+tree.plot_tree(clf, filled=True, feature_names=X.columns, class_names=['Not Approved', 'Approved'], rounded=True, fontsize=10)
+plt.show()
