@@ -1,0 +1,68 @@
+# Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+
+df = pd.read_csv(r'E:\ML Dataset\LP-1 Dataset\Decision Tree & Naive Bayes Classification\Social_Network_Ads.csv')
+df.head()
+
+print(df.columns)
+print(df.dtypes)
+
+# Encode 'Gender' as 0 for Male and 1 for Female
+label_encoder = LabelEncoder()
+df['Gender'] = label_encoder.fit_transform(df['Gender'])
+
+# Drop the 'User ID' column as it's not a useful feature for prediction
+df = df.drop('User ID', axis=1)
+
+# Display the first few rows after preprocessing
+print(df.head())
+
+
+# Define features (X) and target variable (y)
+X = df.drop('Purchased', axis=1)  # Features
+y = df['Purchased']  # Target variable
+
+
+# Split the dataset into training and testing sets (70% training, 30% testing)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Display the shapes of the training and testing data
+print(f"Training data shape: {X_train.shape}")
+print(f"Testing data shape: {X_test.shape}")
+
+
+
+# Initialize the Gaussian Naïve Bayes classifier
+nb_classifier = GaussianNB()
+
+# Train the model
+nb_classifier.fit(X_train, y_train)
+
+
+# Make predictions on the test data
+y_pred = nb_classifier.predict(X_test)
+
+# Display the first few predictions
+print("Predictions:", y_pred[:10])
+
+
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy * 100:.2f}%')
+
+# Generate confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+print('Confusion Matrix:')
+print(conf_matrix)
+
+# Generate classification report
+class_report = classification_report(y_test, y_pred)
+print('Classification Report:')
+print(class_report)
+
