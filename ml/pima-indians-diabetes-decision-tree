@@ -1,0 +1,96 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+import matplotlib.pyplot as plt
+from sklearn import tree
+from sklearn.tree import plot_tree
+
+# Load the dataset
+df = pd.read_csv(r'E:\ML Dataset\LP-1 Dataset\Decision Tree & Naive Bayes Classification\pima-indians-diabetes.csv')
+df.head()
+
+print(df.columns)
+print(df.dtypes)
+
+# Check for missing values
+print("\nMissing values in each column:")
+print(data.isnull().sum())
+
+# Handle missing values if any
+# For simplicity, we'll fill missing values with the mean (can be improved depending on your needs)
+data.fillna(data.mean(), inplace=True)
+
+# Check if there are any categorical variables that need encoding (optional)
+# In this case, all columns are numerical, so we don't need encoding.
+
+# Remove outliers (optional, depending on domain knowledge, here we simply check for extreme values)
+# This is just an example, and you may want to apply domain-specific rules
+data = data[(data >= 0).all(axis=1)]  # Remove negative values if any
+
+print("\nCleaned Data:")
+print(data.describe())
+
+data.columns = data.columns.str.strip()
+
+# Verify the column names after cleaning
+print("Column names after cleaning:")
+print(data.columns)
+
+
+
+# Define features (X) and target variable (y)
+X = data.drop('Class variable (0 or 1)', axis=1)  # Features (all columns except target)
+y = data['Class variable (0 or 1)']  # Target variable
+
+# Split the dataset into training and testing sets (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+print(f"Training Set: {X_train.shape[0]} samples, Test Set: {X_test.shape[0]} samples")
+
+
+
+# Initialize the Decision Tree Classifier
+dt_classifier = DecisionTreeClassifier(random_state=42)
+
+# Train the model on the training data
+dt_classifier.fit(X_train, y_train)
+
+# Make predictions on the test set
+y_pred = dt_classifier.predict(X_test)
+
+
+
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy * 100:.2f}%")
+
+# Classification report
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Confusion matrix
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+
+
+
+# Plot the decision tree
+plt.figure(figsize=(12,8))
+plot_tree(dt_classifier, filled=True, feature_names=X.columns, class_names=['No Diabetes', 'Diabetes'], rounded=True)
+plt.title("Decision Tree - Diabetes Classification")
+plt.show()
+
+
+
+# Pick a random sample from the test set
+random_sample = X_test.sample(1, random_state=42)
+predicted_class = dt_classifier.predict(random_sample)
+
+# Display the prediction
+print(f"\nRandom Sample Prediction: {'Diabetes' if predicted_class[0] == 1 else 'No Diabetes'}")
+
