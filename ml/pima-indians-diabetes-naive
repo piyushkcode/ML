@@ -1,0 +1,79 @@
+# Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+df = pd.read_csv(r'E:\ML Dataset\LP-1 Dataset\Decision Tree & Naive Bayes Classification\pima-indians-diabetes.csv')
+df.head()
+
+
+print(df.columns)
+print(df.dtypes)
+
+# Check for missing values
+print("\nMissing values in each column:")
+print(df.isnull().sum())
+
+# Handle missing values if any
+# For simplicity, we'll fill missing values with the mean (can be improved depending on your needs)
+df.fillna(df.mean(), inplace=True)
+
+# Check if there are any categorical variables that need encoding (optional)
+# In this case, all columns are numerical, so we don't need encoding.
+
+# Remove outliers (optional, depending on domain knowledge, here we simply check for extreme values)
+# This is just an example, and you may want to apply domain-specific rules
+df = df[(df >= 0).all(axis=1)]  # Remove negative values if any
+
+print("\nCleaned Data:")
+print(df.describe())
+
+
+df.columns = df.columns.str.strip()
+# Verify the column names after cleaning
+print("Column names after cleaning:")
+print(df.columns)
+
+
+
+# Define features (X) and target variable (y)
+X = df.drop('Class variable (0 or 1)', axis=1)  # Features (all columns except target)
+y = df['Class variable (0 or 1)']  # Target variable
+
+# Split the dataset into training and testing sets (70% train, 30% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+print(f"Training Set: {X_train.shape[0]} samples, Test Set: {X_test.shape[0]} samples")
+
+
+
+# Initialize the Gaussian Naïve Bayes classifier
+nb_classifier = GaussianNB()
+
+# Train the model
+nb_classifier.fit(X_train, y_train)
+
+
+# Make predictions on the test data
+y_pred = nb_classifier.predict(X_test)
+
+# Display the first few predictions
+print("Predictions:", y_pred[:10])
+
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy * 100:.2f}%')
+
+# Generate confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+print('Confusion Matrix:')
+print(conf_matrix)
+
+# Generate classification report
+class_report = classification_report(y_test, y_pred)
+print('Classification Report:')
+print(class_report)
+
+
