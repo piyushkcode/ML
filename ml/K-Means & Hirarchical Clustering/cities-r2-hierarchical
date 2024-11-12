@@ -1,0 +1,85 @@
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.cluster import AgglomerativeClustering
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+# Load the dataset
+df = pd.read_csv('Cities_r2.csv')
+
+# Check the first few rows of the dataset to understand its structure
+df.head()
+
+# --------------------------- Data Preprocessing ----------------------------
+
+# Step 1: Encode categorical columns using LabelEncoder
+# Label encoding converts categorical variables (state_name, location) into numeric values
+label_encoder = LabelEncoder()
+
+# Encoding 'state_name' and 'location' columns
+df['state_name'] = label_encoder.fit_transform(df['state_name'])
+df['location'] = label_encoder.fit_transform(df['location'])
+
+# Step 2: Scaling the features
+# Feature scaling is done to standardize the numeric features for better performance with clustering algorithms
+scaler = StandardScaler()
+
+# Scale the relevant columns (numerical data) that will be used for clustering
+scaled_df = scaler.fit_transform(df[['population_total', 'population_male', 'population_female',
+                                     'literates_total', 'literates_male', 'literates_female',
+                                     'effective_literacy_rate_total', 'sex_ratio', 'child_sex_ratio',
+                                     'total_graduates', 'male_graduates', 'female_graduates']])
+
+# Convert the scaled data back into a DataFrame for easier handling
+scaled_df = pd.DataFrame(scaled_df, columns=['population_total', 'population_male', 'population_female',
+                                              'literates_total', 'literates_male', 'literates_female',
+                                              'effective_literacy_rate_total', 'sex_ratio', 'child_sex_ratio',
+                                              'total_graduates', 'male_graduates', 'female_graduates'])
+
+# ------------------------ Hierarchical Clustering ----------------------------
+
+# Step 3: Apply Agglomerative Clustering
+# AgglomerativeClustering is a type of hierarchical clustering that creates a hierarchy of clusters.
+# Here, we're clustering cities based on the 'effective_literacy_rate_total' column, but you can add more features as needed.
+
+# Create the AgglomerativeClustering model
+hc = AgglomerativeClustering(n_clusters=5, metric='euclidean', linkage='ward')
+
+# Fit the model and assign cluster labels to each city in the DataFrame
+df['Cluster'] = hc.fit_predict(scaled_df[['effective_literacy_rate_total']])
+
+# Display the first few rows to see the cluster assignments
+print(df.head())
+
+# -------------------------- Dendrogram Visualization ------------------------
+
+# Step 4: Generate a Dendrogram
+# The dendrogram helps us understand the hierarchical structure of the clusters.
+# It shows how clusters are merged at each step based on their distance (similarity).
+
+# Generate the linkage matrix (used to create the dendrogram)
+linked = linkage(scaled_df[['effective_literacy_rate_total']], method='ward')
+
+# Create the dendrogram plot
+plt.figure(figsize=(10, 7))
+dendrogram(linked)
+plt.title('Dendrogram for Hierarchical Clustering')
+plt.xlabel('Index')
+plt.ylabel('Euclidean Distance')
+plt.show()
+
+# ------------------------ Visualizing the Clusters -------------------------
+
+# Step 5: Visualize the clusters
+# We can plot the cities and their literacy rates, coloring them by their assigned cluster.
+# This helps to visually interpret how cities are grouped together based on their effective literacy rate.
+
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x=df['name_of_city'], y=df['effective_literacy_rate_total'], hue=df['Cluster'], palette='viridis', s=100)
+plt.title('Clusters Based on Effective Literacy Rate Total')
+plt.xlabel('City')
+plt.ylabel('Effective Literacy Rate Total')
+plt.xticks(rotation=90)  # Rotate city names for better readability
+plt.show()
