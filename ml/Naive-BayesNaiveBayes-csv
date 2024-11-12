@@ -1,0 +1,69 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB  # Gaussian Naïve Bayes for continuous features
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+df = pd.read_csv(r'E:\ML Dataset\LP-1 Dataset\Decision Tree & Naive Bayes Classification\NaiveBayes.csv')
+df.head()
+
+
+print(df.columns)
+print(df.dtypes)
+
+
+# Check for missing values
+print(df.isnull().sum())
+
+# In this case, there doesn't seem to be any missing values, but if there were:
+# For example, you could handle missing data like this:
+# data.fillna(data.mean(), inplace=True)  # Filling numerical columns with mean value
+
+# If any categorical columns (other than the target) need to be encoded, we could use label encoding or one-hot encoding
+# Example: If 'Purchased' were categorical, you could convert it to numeric like this:
+# data['Purchased'] = data['Purchased'].map({'Yes': 1, 'No': 0})
+
+# For simplicity, let's assume no encoding or missing value imputation is necessary in this case.
+
+
+# Define the features (X) and the target (y)
+X = df[['Age', 'Salary']]  # Features
+y = df['Purchased']        # Target variable
+
+
+# Split the dataset into training and testing sets (70% training, 30% testing)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Display the shapes of the train and test sets
+print(f"Training data shape: {X_train.shape}")
+print(f"Testing data shape: {X_test.shape}")
+
+
+# Initialize the Naïve Bayes classifier (Gaussian Naïve Bayes for continuous data)
+nb_classifier = GaussianNB()
+
+# Train the model
+nb_classifier.fit(X_train, y_train)
+
+# Model is now trained and ready for making predictions
+
+
+# Make predictions on the test data
+y_pred = nb_classifier.predict(X_test)
+
+# Display the first few predictions
+print("Predictions:", y_pred[:10])
+
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy * 100:.2f}%')
+
+# Generate confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+print('Confusion Matrix:')
+print(conf_matrix)
+
+# Generate classification report
+class_report = classification_report(y_test, y_pred)
+print('Classification Report:')
+print(class_report)
