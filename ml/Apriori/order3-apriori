@@ -1,0 +1,74 @@
+# Import necessary libraries
+import pandas as pd
+from mlxtend.frequent_patterns import apriori, association_rules
+from mlxtend.preprocessing import TransactionEncoder
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+df = pd.read_csv(r'E:\ML Dataset\LP-1 Dataset\Apriori\Order3.csv')
+
+df.head()
+
+
+print(df.columns)
+print(df.dtypes)
+
+# Inspect the data structure
+print(df.head())
+print(df.info())
+
+df = df[['TransactionNo', 'Items']]
+
+# Step 2: Generate the List of Transactions
+# -----------------------------------------
+# Group items by each transaction to create a list of items bought in each transaction
+transactions = df.groupby('TransactionNo')['Items'].apply(list).tolist()
+
+# Convert transactions into a one-hot encoded DataFrame using TransactionEncoder
+te = TransactionEncoder()
+te_ary = te.fit(transactions).transform(transactions)
+transaction_df = pd.DataFrame(te_ary, columns=te.columns_)
+
+# Check the resulting one-hot encoded transaction DataFrame
+print("\nOne-Hot Encoded Transaction DataFrame:")
+print(transaction_df.head())
+
+# Step 3: Train the Apriori Algorithm on the Dataset
+# ---------------------------------------------------
+# Apply the Apriori algorithm to find frequent itemsets
+# Choose a minimum support threshold (e.g., min_support=0.005 for 0.5% frequency)
+frequent_itemsets = apriori(transaction_df, min_support=0.005, use_colnames=True)
+
+# Display the frequent itemsets found by the Apriori algorithm
+print("\nFrequent Itemsets:")
+print(frequent_itemsets)
+
+
+# Step 4: Generate Association Rules
+# -----------------------------------
+# If frequent itemsets are found, generate association rules
+if not frequent_itemsets.empty:
+    # Set a minimum confidence threshold for rule generation (e.g., min_confidence=0.3 for 30%)
+    
+    rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=0.3, num_itemsets=10)
+
+    # Display the generated rules with relevant metrics
+    print("\nAssociation Rules:")
+    print(rules[['antecedents', 'consequents', 'support', 'confidence', 'lift']])
+else:
+    print("No frequent itemsets found. Try reducing min_support to obtain more itemsets.")
+
+# Step 5: Visualize the Association Rules
+# ---------------------------------------
+# Check if rules DataFrame is not empty before visualizing
+if not frequent_itemsets.empty:
+    # Scatter plot to visualize Support vs Confidence with Lift as color and size
+    plt.figure(figsize=(10, 6))
+    sns.scatterplot(x='support', y='confidence', size='lift', hue='lift', data=rules, palette='viridis', sizes=(20, 200))
+    plt.title('Support vs Confidence with Lift as Size')
+    plt.xlabel('Support')
+    plt.ylabel('Confidence')
+    plt.legend(loc='best')
+    plt.show()
+else:
+    print("No rules to visualize.")
