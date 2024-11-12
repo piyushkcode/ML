@@ -1,0 +1,86 @@
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Step 1: Load the dataset
+df = pd.read_csv('Cities_r2.csv')
+
+# Step 2: Check the first few rows to understand the dataset structure
+df.head()
+
+# --------------------------- Data Preprocessing ----------------------------
+
+# Step 3: Label Encoding for categorical columns
+# Label Encoding converts categorical variables like 'state_name' and 'location' into numeric values
+label_encoder = LabelEncoder()
+
+# Encode 'state_name' and 'location' columns
+df['state_name'] = label_encoder.fit_transform(df['state_name'])
+df['location'] = label_encoder.fit_transform(df['location'])
+
+# Step 4: Feature Scaling using StandardScaler
+# Scaling the relevant columns (numerical data) that will be used for clustering
+scaler = StandardScaler()
+
+# Scale the 'effective_literacy_rate_total' along with other relevant features
+scaled_df = scaler.fit_transform(df[['population_total', 'population_male', 'population_female',
+                                     'literates_total', 'literates_male', 'literates_female',
+                                     'effective_literacy_rate_total', 'sex_ratio', 'child_sex_ratio',
+                                     'total_graduates', 'male_graduates', 'female_graduates']])
+
+# Convert the scaled data back into a DataFrame for easier handling
+scaled_df = pd.DataFrame(scaled_df, columns=['population_total', 'population_male', 'population_female',
+                                              'literates_total', 'literates_male', 'literates_female',
+                                              'effective_literacy_rate_total', 'sex_ratio', 'child_sex_ratio',
+                                              'total_graduates', 'male_graduates', 'female_graduates'])
+
+# ------------------------ K-Means Clustering ----------------------------
+
+# Step 5: Apply K-Means Clustering
+# KMeans requires specifying the number of clusters. You can find an optimal number using the Elbow Method.
+
+# Using the 'effective_literacy_rate_total' for clustering (you can include more features if needed)
+X = scaled_df[['effective_literacy_rate_total']]
+
+# Apply KMeans clustering with an initial assumption of 3 clusters (you can optimize this)
+kmeans = KMeans(n_clusters=3, random_state=42)
+
+# Fit the KMeans model and predict the clusters
+df['Cluster'] = kmeans.fit_predict(X)
+
+# Display the first few rows to see the cluster assignments
+print(df.head())
+
+# Step 6: Visualizing the clusters
+# Visualize the cities and their literacy rates, coloring them by their assigned cluster
+
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x=df['name_of_city'], y=df['effective_literacy_rate_total'], hue=df['Cluster'], palette='viridis', s=100)
+plt.title('Cities Grouped by Literacy Rate')
+plt.xlabel('City')
+plt.ylabel('Effective Literacy Rate Total')
+plt.xticks(rotation=90)  # Rotate city names for better readability
+plt.show()
+
+# ------------------------- Finding Optimal Number of Clusters --------------------------
+
+# Step 7: Elbow Method to find the optimal number of clusters
+# The Elbow Method helps to determine the optimal number of clusters by plotting the inertia (within-cluster sum of squares)
+# against the number of clusters.
+
+inertia = []
+for i in range(1, 11):  # Try 1 to 10 clusters
+    kmeans = KMeans(n_clusters=i, random_state=42)
+    kmeans.fit(X)
+    inertia.append(kmeans.inertia_)
+
+# Plotting the inertia values to visualize the "elbow"
+plt.figure(figsize=(8, 5))
+plt.plot(range(1, 11), inertia, marker='o')
+plt.title('Elbow Method for Optimal Clusters')
+plt.xlabel('Number of Clusters')
+plt.ylabel('Inertia')
+plt.show()
