@@ -1,0 +1,264 @@
+use yourDatabaseName; // Switch to or create your database
+
+db.createCollection("employees");
+
+db.employees.insertMany([
+  {
+    empid: 1,
+    ename: "John Doe",
+    city: "New York",
+    educational_background: "MBA",
+    salary: 40000,
+    post: "Accountant",
+    join_date: new Date("2018-03-10"),
+    skills: ["Finance", "Excel"],
+    department: "Account"
+  },
+  {
+    empid: 2,
+    ename: "Jane Smith",
+    city: "San Francisco",
+    educational_background: "PhD",
+    salary: 45000,
+    post: "Professor",
+    join_date: new Date("2019-06-15"),
+    skills: ["Teaching", "Research"],
+    department: "CSE"
+  },
+  {
+    empid: 3,
+    ename: "Alice Johnson",
+    city: "Los Angeles",
+    educational_background: "MCA",
+    salary: 32000,
+    post: "Librarian",
+    join_date: new Date("2020-05-05"),
+    skills: ["Management", "Organization"],
+    department: "Library"
+  },
+  {
+    empid: 4,
+    ename: "Sam Brown",
+    city: "Chicago",
+    educational_background: "B.Tech",
+    salary: 38000,
+    post: "System Admin",
+    join_date: new Date("2021-08-22"),
+    skills: ["Networking", "Security"],
+    department: "IT"
+  },
+  {
+    empid: 5,
+    ename: "Mark Lee",
+    city: "Houston",
+    educational_background: "B.Sc",
+    salary: 27000,
+    post: "Technician",
+    join_date: new Date("2022-01-12"),
+    skills: ["Electronics", "Repair"],
+    department: "ET"
+  }
+]);
+
+List out the employees who are earning a salary between 30,000 and 45,000:
+db.employees.find({ salary: { $gte: 30000, $lte: 45000 } });
+
+List out the department names having at least four employees:
+db.employees.aggregate([
+  { $group: { _id: "$department", employee_count: { $sum: 1 } } },
+  { $match: { employee_count: { $gte: 4 } } }
+]);
+
+Find the number of employees working in the “IT” department:
+db.employees.countDocuments({ department: "IT" });
+
+Display the name of the employee who gets the maximum salary:
+db.employees.find().sort({ salary: -1 }).limit(1);
+
+Display the name of the department that has the maximum number of employees:
+db.employees.aggregate([
+  { $group: { _id: "$department", employee_count: { $sum: 1 } } },
+  { $sort: { employee_count: -1 } },
+  { $limit: 1 }
+]);
+
+Update the department name from ‘IT’ to “Information Technology”:
+db.employees.updateMany(
+  { department: "IT" },
+  { $set: { department: "Information Technology" } }
+);
+
+Perform Create Index, Get Index, and Drop Index operations on the collection:
+
+Create Index:
+db.employees.createIndex({ ename: 1 });
+
+Get Indexes:
+db.employees.getIndexes();
+
+Drop Index:
+db.employees.dropIndex("ename_1");
+
+Write a MapReduce or Aggregation function to display the total number of employees per department:
+
+Using Aggregation:
+db.employees.aggregate([
+  { $group: { _id: "$department", total_employees: { $sum: 1 } } }
+]);
+
+Using MapReduce:
+var map = function() {
+  emit(this.department, 1);
+};
+
+var reduce = function(key, values) {
+  return Array.sum(values);
+};
+
+db.employees.mapReduce(map, reduce, { out: "department_employee_count" });
+db.department_employee_count.find();
+----------------------------------------------------------------------------------------------
+use yourDatabaseName; // Switch to or create your database
+
+db.createCollection("employees");
+
+db.employees.insertMany([
+  {
+    empid: 1,
+    ename: "Sam Smith",
+    city: "Baroda",
+    educational_background: "B.Tech",
+    salary: 45000,
+    post: "Developer",
+    join_date: new Date("2018-03-20"),
+    skills: ["Programming", "Database"],
+    department: "CSE"
+  },
+  {
+    empid: 2,
+    ename: "Mike Johnson",
+    city: "Ahmedabad",
+    educational_background: "M.Tech",
+    salary: 50000,
+    post: "System Analyst",
+    join_date: new Date("2019-04-20"),
+    skills: ["Programming", "Network Security"],
+    department: "CSE"
+  },
+  {
+    empid: 3,
+    ename: "Alice Brown",
+    city: "Pune",
+    educational_background: "MCA",
+    salary: 35000,
+    post: "Technician",
+    join_date: new Date("2021-02-15"),
+    skills: ["Electronics", "Repair"],
+    department: "ETC"
+  },
+  {
+    empid: 4,
+    ename: "Sophia Green",
+    city: "Pune",
+    educational_background: "B.Sc",
+    salary: 32000,
+    post: "Research Assistant",
+    join_date: new Date("2019-10-22"),
+    skills: ["Data Analysis", "Programming"],
+    department: "FE"
+  },
+  {
+    empid: 5,
+    ename: "Michael Chen",
+    city: "Mumbai",
+    educational_background: "MBA",
+    salary: 70000,
+    post: "Accountant",
+    join_date: new Date("2020-01-05"),
+    skills: ["Finance", "Excel"],
+    department: "Account"
+  }
+]);
+
+List all employees from the institute:
+
+javascript
+Copy code
+db.employees.find({});
+List employee details from Baroda or Ahmedabad and working in CSE department:
+
+javascript
+Copy code
+db.employees.find({
+  city: { $in: ["Baroda", "Ahmedabad"] },
+  department: "CSE"
+});
+List of empid, ename, department, and skills of employees who joined on the 20th of any month:
+
+javascript
+Copy code
+db.employees.find(
+  { join_date: { $regex: /-\d{2}-20/ } },
+  { empid: 1, ename: 1, department: 1, skills: 1 }
+);
+Calculate total experience of each employee (today’s date assumed as reference):
+
+javascript
+Copy code
+db.employees.aggregate([
+  {
+    $project: {
+      ename: 1,
+      experience_in_years: {
+        $divide: [{ $subtract: [new Date(), "$join_date"] }, 365 * 24 * 60 * 60 * 1000]
+      }
+    }
+  }
+]);
+
+List the name of employees whose names start with ‘S’ or ‘M’, work in FE department, and have “Programming” skill:
+db.employees.find({
+  ename: { $regex: /^[SsMm]/ },
+  department: "FE",
+  skills: "Programming"
+});
+
+Count the number of employees working in the ETC department in Pune:
+db.employees.countDocuments({ department: "ETC", city: "Pune" });
+
+Calculate department-wise total salary and display only the department(s) with the maximum salary payout:
+db.employees.aggregate([
+  { $group: { _id: "$department", total_salary: { $sum: "$salary" } } },
+  { $sort: { total_salary: -1 } },
+  { $limit: 1 }
+]);
+
+Perform Create Index, Get Index, and Drop Index operations on the collection:
+
+Create Index on ename field:
+db.employees.createIndex({ ename: 1 });
+
+Get Indexes:
+db.employees.getIndexes();
+
+Drop Index:
+db.employees.dropIndex("ename_1");
+
+Using MapReduce/Aggregation to display the total number of employees from each department:
+
+Using Aggregation:
+db.employees.aggregate([
+  { $group: { _id: "$department", total_employees: { $sum: 1 } } }
+]);
+
+Using MapReduce:
+var mapFunction = function() {
+  emit(this.department, 1);
+};
+
+var reduceFunction = function(key, values) {
+  return Array.sum(values);
+};
+
+db.employees.mapReduce(mapFunction, reduceFunction, { out: "department_employee_count" });
+db.department_employee_count.find();
