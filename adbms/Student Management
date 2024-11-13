@@ -1,0 +1,163 @@
+use yourDatabaseName; // Switch to or create your database
+
+db.createCollection("students");
+
+db.students.insertMany([
+  {
+    student_id: 1,
+    student_name: "John Doe",
+    address: "Baroda",
+    birthdate: new Date("2002-03-15"),
+    CGPA: 8.5,
+    fee: 25000,
+    current_year: "TE",
+    join_date: new Date("2020-08-01"),
+    skills: ["Java", "Python", "Machine Learning"],
+    department: "CSE"
+  },
+  {
+    student_id: 2,
+    student_name: "Jane Smith",
+    address: "Ahmedabad",
+    birthdate: new Date("2003-06-20"),
+    CGPA: 7.8,
+    fee: 23000,
+    current_year: "BE",
+    join_date: new Date("2019-09-15"),
+    skills: ["Web Development", "JavaScript"],
+    department: "CSE"
+  },
+  {
+    student_id: 3,
+    student_name: "Sam Brown",
+    address: "Pune",
+    birthdate: new Date("2001-07-05"),
+    CGPA: 9.2,
+    fee: 27000,
+    current_year: "SE",
+    join_date: new Date("2021-07-10"),
+    skills: ["Data Science", "R", "Python"],
+    department: "IT"
+  },
+  {
+    student_id: 4,
+    student_name: "Alice Johnson",
+    address: "Ahmedabad",
+    birthdate: new Date("2000-12-10"),
+    CGPA: 8.0,
+    fee: 22000,
+    current_year: "FE",
+    join_date: new Date("2022-05-05"),
+    skills: ["HTML", "CSS", "JavaScript"],
+    department: "ET"
+  },
+  {
+    student_id: 5,
+    student_name: "Mark Lee",
+    address: "Baroda",
+    birthdate: new Date("2002-04-15"),
+    CGPA: 7.5,
+    fee: 21000,
+    current_year: "SE",
+    join_date: new Date("2021-01-12"),
+    skills: ["Database Management", "SQL"],
+    department: "CSE"
+  }
+]);
+
+Display the count of total number of students from the institute:
+db.students.countDocuments();
+
+Display all the students in seniority level (based on CGPA):
+db.students.find().sort({ CGPA: -1 });
+
+List the student details that are from Baroda or Ahmedabad and in the CSE department:
+db.students.find({
+  $or: [{ address: "Baroda" }, { address: "Ahmedabad" }],
+  department: "CSE"
+});
+
+List of the student_id, student_name, department, and skills of students whose birthdate is the 20th of any month:
+db.students.find({
+  birthdate: { $dayOfMonth: 20 }
+}, { student_id: 1, student_name: 1, department: 1, skills: 1 });
+
+Calculate the age of each student (based on today's date):
+db.students.aggregate([
+  {
+    $project: {
+      student_id: 1,
+      student_name: 1,
+      birthdate: 1,
+      current_age: {
+        $floor: {
+          $divide: [
+            { $subtract: [new Date(), "$birthdate"] },
+            365 * 24 * 60 * 60 * 1000
+          ]
+        }
+      }
+    }
+  }
+]);
+
+List the names of students whose name starts with 'S' or 'M' and who are in the CSE department and have typing skill:
+db.students.find({
+  student_name: { $regex: /^[Sm]/ },
+  department: "CSE",
+  skills: "Typing"
+}, { student_name: 1 });
+
+Count the number of students in the IT department from Pune:
+db.students.countDocuments({
+  department: "IT",
+  address: "Pune"
+});
+
+Arrange the student names in alphabetical order whose age is between 18 to 20 and are in the ETC department:
+db.students.aggregate([
+  {
+    $project: {
+      student_name: 1,
+      age: {
+        $floor: {
+          $divide: [
+            { $subtract: [new Date(), "$birthdate"] },
+            365 * 24 * 60 * 60 * 1000
+          ]
+        }
+      },
+      department: 1
+    }
+  },
+  { $match: { age: { $gte: 18, $lte: 20 }, department: "ETC" } },
+  { $sort: { student_name: 1 } }
+]);
+
+Perform Create Index, Get Index, and Drop Index operation on collection:
+
+Create Index:
+db.students.createIndex({ student_name: 1 });
+
+Get Indexes:
+db.students.getIndexes();
+
+Drop Index:
+db.students.dropIndex("student_name_1");
+
+Write a MapReduce or Aggregation function to display the total number of students from each department:
+Using Aggregation:
+db.students.aggregate([
+  { $group: { _id: "$department", total_students: { $sum: 1 } } }
+]);
+
+Using MapReduce:
+var map = function() {
+  emit(this.department, 1);
+};
+var reduce = function(key, values) {
+  return Array.sum(values);
+};
+db.students.mapReduce(map, reduce, { out: "department_count" });
+db.department_count.find();
+------------------------------------------------------------------------------------------
