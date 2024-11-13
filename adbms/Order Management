@@ -1,0 +1,263 @@
+use yourDatabaseName; // Switch to or create your database
+db.createCollection("ORDERS");
+
+db.ORDERS.insertMany([
+  {
+    order_id: 1,
+    customer: { name: "John Doe", city: "Pune" },
+    products: [
+      { product_name: "Mobile", quantity: 1, price: 15000 },
+      { product_name: "Laptop", quantity: 1, price: 55000 }
+    ],
+    total_amount: 70000
+  },
+  {
+    order_id: 2,
+    customer: { name: "Jane Smith", city: "Mumbai" },
+    products: [
+      { product_name: "Shoes", quantity: 2, price: 3000 },
+      { product_name: "Cloth", quantity: 3, price: 1500 }
+    ],
+    total_amount: 10500
+  },
+  {
+    order_id: 3,
+    customer: { name: "Sam Brown", city: "Pune" },
+    products: [
+      { product_name: "Laptop", quantity: 1, price: 55000 }
+    ],
+    total_amount: 55000
+  },
+  {
+    order_id: 4,
+    customer: { name: "Alice Johnson", city: "Delhi" },
+    products: [
+      { product_name: "Mobile", quantity: 1, price: 20000 },
+      { product_name: "Cloth", quantity: 2, price: 1500 }
+    ],
+    total_amount: 23000
+  }
+]);
+
+1. Retrieve All Documents
+db.ORDERS.find();
+
+2. List the Name of Customers Who Purchased Product "Mobile"
+db.ORDERS.find({ "products.product_name": "Mobile" }, { "customer.name": 1 });
+
+3. Change the Product Quantity from 1 to 3 for Product "Laptop" in Any Order
+db.ORDERS.updateOne(
+  { "products.product_name": "Laptop" },
+  { $set: { "products.$.quantity": 3 } }
+);
+
+4. Count How Many Customers Are from Pune Using $exists
+db.ORDERS.find({ "customer.city": { $exists: true, $eq: "Pune" } }).count();
+
+5. Find the Customer Who Purchased Both "Shoes" and "Cloth"
+db.ORDERS.find({
+  "products.product_name": { $all: ["Shoes", "Cloth"] }
+}, { "customer.name": 1 });
+
+6. Find the Top 3 Buyers (Based on total_amount)
+db.ORDERS.find().sort({ total_amount: -1 }).limit(3);
+
+7. Display All Orders Where Total Amount is Greater Than 20000
+db.ORDERS.find({ total_amount: { $gt: 20000 } });
+
+
+Step 3: Index Operations
+
+#Create an Index on customer.city Field
+db.ORDERS.createIndex({ "customer.city": 1 });
+
+#Get Index Information
+db.ORDERS.getIndexes();
+
+#Drop Index on customer.city Field
+db.ORDERS.dropIndex("customer.city_1");
+
+Step 4: Aggregation or MapReduce to Calculate Total Price per Order
+
+#Using Aggregation to Calculate Total Price per Order
+db.ORDERS.aggregate([
+  {
+    $project: {
+      order_id: 1,
+      total_price: {
+        $sum: {
+          $map: {
+            input: "$products",
+            as: "product",
+            in: { $multiply: ["$$product.quantity", "$$product.price"] }
+          }
+        }
+      }
+    }
+  }
+]);
+
+Using MapReduce
+db.ORDERS.mapReduce(
+  function() {
+    var total = 0;
+    this.products.forEach(function(product) {
+      total += product.quantity * product.price;
+    });
+    emit(this.order_id, total);
+  },
+  function(key, values) {
+    return Array.sum(values);
+  },
+  {
+    out: "total_price_per_order"
+  }
+);
+
+// To view results of MapReduce
+db.total_price_per_order.find();
+---------------------------------------------------------------------------------------
+1. Display All Documents in a Collection
+db.ORDERS.find();
+
+2. List Customers in Ascending Order of Their Names
+db.ORDERS.find({}, { "customer.name": 1 }).sort({ "customer.name": 1 });
+
+3. Display All Orders Placed Before April 2022
+Assuming the Order_date field is stored as an ISO date:
+db.ORDERS.find({ Order_date: { $lt: new ISODate("2022-04-01") } });
+
+4. Display the Name of Customer Who Purchased an Order with a Price Greater Than 25000
+db.ORDERS.find({ total_amount: { $gt: 25000 } }, { "customer.name": 1 });
+
+5. Display All Orders That Contain the Product "PenDrive"
+db.ORDERS.find({ "products.product_name": "PenDrive" });
+
+6. Update Order_date of Any Order Purchased by Customer “ABC”
+db.ORDERS.updateOne(
+  { "customer.name": "ABC" },
+  { $set: { Order_date: new ISODate("2023-01-01") } } // Set to the new desired date
+);
+
+7. List All Documents with Orders That Contain Products Whose Quantity is Less Than 10
+db.ORDERS.find({ "products.quantity": { $lt: 10 } });
+
+8. Display the Mobile Number of Customers Who Have the Highest Buying Total
+To find the highest buying total, sort by total_amount in descending order and get the first document:
+db.ORDERS.find().sort({ total_amount: -1 }).limit(1).project({ "customer.mobile_number": 1 });
+
+9. Perform Index Operations (Create Index, Get Index, Drop Index)
+
+Create an Index on Order_date
+db.ORDERS.createIndex({ Order_date: 1 });
+
+Get Index Information
+db.ORDERS.getIndexes();
+
+Drop Index on Order_date
+db.ORDERS.dropIndex("Order_date_1");
+
+10. Using Aggregation to Display Total Orders per Customer
+db.ORDERS.aggregate([
+  {
+    $group: {
+      _id: "$customer.name",
+      total_orders: { $sum: 1 }
+    }
+  },
+  {
+    $sort: { total_orders: -1 } // Sort by total orders in descending order, optional
+  }
+]);
+--------------------------------------------------------------------------------------------------------
+db.createCollection("ORDERS");
+
+db.ORDERS.insertMany([
+  {
+    order_id: 1,
+    customer: { name: "John Doe", mob_no: "9876543210", age: 30, city: "Pune" },
+    products: [
+      { product_name: "Mobile", quantity: 1, price: 15000 },
+      { product_name: "Laptop", quantity: 1, price: 55000 }
+    ],
+    total_amount: 70000,
+    order_date: new Date("2023-03-15")
+  },
+  {
+    order_id: 2,
+    customer: { name: "Jane Smith", mob_no: "9123456789", age: 25, city: "Mumbai" },
+    products: [
+      { product_name: "Shoes", quantity: 2, price: 3000 },
+      { product_name: "Cloth", quantity: 3, price: 1500 }
+    ],
+    total_amount: 10500,
+    order_date: new Date("2022-02-10")
+  },
+  {
+    order_id: 3,
+    customer: { name: "Sam Brown", mob_no: "9123456790", age: 28, city: "Pune" },
+    products: [
+      { product_name: "Laptop", quantity: 1, price: 55000 }
+    ],
+    total_amount: 55000,
+    order_date: new Date("2023-05-20")
+  },
+  {
+    order_id: 4,
+    customer: { name: "Alice Johnson", mob_no: "9876543221", age: 27, city: "Delhi" },
+    products: [
+      { product_name: "Mobile", quantity: 1, price: 20000 },
+      { product_name: "Cloth", quantity: 2, price: 1500 }
+    ],
+    total_amount: 23000,
+    order_date: new Date("2022-12-10")
+  }
+]);
+
+Retrieve all documents from the ORDERS collection
+db.ORDERS.find();
+
+List customers in ascending order of their age
+db.ORDERS.find().sort({ "customer.age": 1 });
+
+Display total number of orders
+db.ORDERS.countDocuments();
+
+Display the mobile numbers of customers who have purchased the product “Shoes”
+db.ORDERS.find(
+  { "products.product_name": "Shoes" },
+  { "customer.mob_no": 1, "_id": 0 }
+);
+
+Display how many customers are there in the CUSTOMERS collection
+db.CUSTOMERS.countDocuments();
+
+Display total number of products purchased in order_id: 2
+db.ORDERS.aggregate([
+  { $match: { order_id: 2 } },
+  { $unwind: "$products" },
+  { $group: { _id: "$order_id", totalQuantity: { $sum: "$products.quantity" } } }
+]);
+
+Add another product with quantity 2 to order_id: 3 for customer “ABC”
+db.ORDERS.updateOne(
+  { order_id: 3, "customer.name": "Sam Brown" },
+  { $push: { products: { product_name: "NewProduct", quantity: 2, price: 500 } } }
+);
+
+Perform Create Index, Get Index, and Drop Index Operations
+
+Create Index on customer.name for optimized search by customer name:
+db.ORDERS.createIndex({ "customer.name": 1 });
+
+Get Index information:
+db.ORDERS.getIndexes();
+
+Drop Index on customer.name:
+db.ORDERS.dropIndex("customer.name_1");
+
+MapReduce or Aggregation Function to Return Total Orders per Customer Using MongoDB’s aggregation framework:
+db.ORDERS.aggregate([
+  { $group: { _id: "$customer.name", totalOrders: { $sum: 1 } } }
+]);
+------------------------------------------------------------------------------------------------------------------------------
